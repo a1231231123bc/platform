@@ -1,24 +1,39 @@
-- name: Setup SSH
-  run: |
-    mkdir -p ~/.ssh
-    echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-    chmod 600 ~/.ssh/id_ed25519
-    ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+name: Deploy Backend
 
-- name: Deploy to server
-  run: |
-    ssh -i ~/.ssh/id_ed25519 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-      set -e
-      cd ~/apps/platform
-      git fetch --all
-      git reset --hard origin/main
+on:
+  push:
+    branches: [ "main" ]
 
-      cd backend
-      pnpm install --frozen-lockfile
-      pnpm prisma migrate deploy
-      pnpm prisma generate
-      pnpm build
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-      sudo systemctl restart platform-api
-      sudo systemctl status platform-api --no-pager
-    EOF
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            set -e
+            cd /home/deploy/apps/platform
+
+            git fetch --all
+            git reset --hard origin/main
+
+            cd backend
+            pnpm install --frozen-lockfile
+            pnpm prisma migrate deploy
+            pnpm prisma generate
+            pnpm build
+
+            sudo systemctl restart platform-api
+            sudo systemctl status platform-api --no-pager
+          EOF
