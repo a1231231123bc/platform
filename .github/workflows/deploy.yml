@@ -9,9 +9,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
@@ -21,14 +18,13 @@ jobs:
 
       - name: Deploy to server
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
             cd /home/deploy/apps/platform
 
             git fetch --all
             git reset --hard origin/main
 
-            cd backend
             pnpm install --frozen-lockfile
             pnpm prisma migrate deploy
             pnpm prisma generate
