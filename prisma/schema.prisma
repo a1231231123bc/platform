@@ -7,7 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Healthcheck {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
+enum JobStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum ContractorType {
+  INDIVIDUAL
+  IP
+  COMPANY
+}
+
+model Job {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  region      String
+  price       Int
+  status      JobStatus @default(DRAFT)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Contractor {
+  id        String          @id @default(uuid())
+  name      String
+  phone     String          @unique
+  type      ContractorType
+  region    String
+  active    Boolean         @default(true)
+
+  createdAt DateTime        @default(now())
 }
