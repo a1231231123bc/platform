@@ -25,6 +25,15 @@ enum InviteStatus {
   DECLINED
 }
 
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  jobs      Job[]
+  createdAt DateTime @default(now())
+}
+
 model Job {
   id          String    @id @default(uuid())
   title       String
@@ -33,6 +42,8 @@ model Job {
   price       Int
   status      JobStatus @default(DRAFT)
 
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
   invites     Invite[]
 
   createdAt   DateTime  @default(now())
