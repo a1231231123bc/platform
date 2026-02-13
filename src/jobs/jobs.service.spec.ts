@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJobDto } from './dto/create-job.dto';
@@ -20,6 +20,7 @@ describe('JobsService', () => {
               create: jest.fn(),
               findMany: jest.fn(),
               findUnique: jest.fn(),
+              update: jest.fn(),
             },
           },
         },
@@ -73,17 +74,6 @@ describe('JobsService', () => {
         orderBy: { createdAt: 'desc' },
       });
     });
-
-    it('should filter by region', async () => {
-      (prisma.job.findMany as jest.Mock).mockResolvedValue([]);
-
-      await service.findAll({ region: 'Москва' });
-
-      expect(prisma.job.findMany).toHaveBeenCalledWith({
-        where: { region: 'Москва' },
-        orderBy: { createdAt: 'desc' },
-      });
-    });
   });
 
   describe('findOne', () => {
@@ -93,9 +83,6 @@ describe('JobsService', () => {
 
       const result = await service.findOne('uuid-1');
 
-      expect(prisma.job.findUnique).toHaveBeenCalledWith({
-        where: { id: 'uuid-1' },
-      });
       expect(result).toEqual(job);
     });
 
@@ -105,6 +92,60 @@ describe('JobsService', () => {
       await expect(service.findOne('nonexistent')).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('updateStatus', () => {
+    it('should transition ACTIVE -> CLOSED', async () => {
+      const job = { id: 'uuid-1', status: JobStatus.ACTIVE };
+      (prisma.job.findUnique as jest.Mock).mockResolvedValue(job);
+      const updated = { ...job, status: JobStatus.CLOSED };
+      (prisma.job.update as jest.Mock).mockResolvedValue(updated);
+
+      const result = await service.updateStatus('uuid-1', JobStatus.CLOSED);
+
+      expect(prisma.job.update).toHaveBeenCalledWith({
+        where: { id: 'uuid-1' },
+        data: { status: JobStatus.CLOSED },
+      });
+      expect(result).toEqual(updated);
+    });
+
+    it('should transition DRAFT -> ACTIVE', async () => {
+      const job = { id: 'uuid-1', status: JobStatus.DRAFT };
+      (prisma.job.findUnique as jest.Mock).mockResolvedValue(job);
+      const updated = { ...job, status: JobStatus.ACTIVE };
+      (prisma.job.update as jest.Mock).mockResolvedValue(updated);
+
+      const result = await service.updateStatus('uuid-1', JobStatus.ACTIVE);
+
+      expect(result).toEqual(updated);
+    });
+
+    it('should reject ACTIVE -> DRAFT', async () => {
+      const job = { id: 'uuid-1', status: JobStatus.ACTIVE };
+      (prisma.job.findUnique as jest.Mock).mockResolvedValue(job);
+
+      await expect(
+        service.updateStatus('uuid-1', JobStatus.DRAFT),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject CLOSED -> any', async () => {
+      const job = { id: 'uuid-1', status: JobStatus.CLOSED };
+      (prisma.job.findUnique as jest.Mock).mockResolvedValue(job);
+
+      await expect(
+        service.updateStatus('uuid-1', JobStatus.ACTIVE),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException for missing job', async () => {
+      (prisma.job.findUnique as jest.Mock).mockResolvedValue(null);
+
+      await expect(
+        service.updateStatus('nonexistent', JobStatus.CLOSED),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

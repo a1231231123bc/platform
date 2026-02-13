@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { FilterJobsDto } from './dto/filter-jobs.dto';
+import { UpdateJobStatusDto } from './dto/update-job-status.dto';
 
 @Controller('jobs')
 export class JobsController {
@@ -20,5 +21,10 @@ export class JobsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.jobsService.findOne(id);
+  }
+
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Body() dto: UpdateJobStatusDto) {
+    return this.jobsService.updateStatus(id, dto.status);
   }
 }

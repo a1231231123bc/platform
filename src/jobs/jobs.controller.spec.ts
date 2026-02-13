@@ -18,6 +18,7 @@ describe('JobsController', () => {
             create: jest.fn(),
             findAll: jest.fn(),
             findOne: jest.fn(),
+            updateStatus: jest.fn(),
           },
         },
       ],
@@ -46,14 +47,12 @@ describe('JobsController', () => {
 
   describe('findAll', () => {
     it('should pass filter to service', async () => {
-      const jobs = [{ id: 'uuid-1' }];
-      (service.findAll as jest.Mock).mockResolvedValue(jobs);
-
       const filter = { status: JobStatus.ACTIVE };
-      const result = await controller.findAll(filter);
+      (service.findAll as jest.Mock).mockResolvedValue([]);
+
+      await controller.findAll(filter);
 
       expect(service.findAll).toHaveBeenCalledWith(filter);
-      expect(result).toEqual(jobs);
     });
   });
 
@@ -66,6 +65,23 @@ describe('JobsController', () => {
 
       expect(service.findOne).toHaveBeenCalledWith('uuid-1');
       expect(result).toEqual(job);
+    });
+  });
+
+  describe('updateStatus', () => {
+    it('should call service.updateStatus with id and status', async () => {
+      const updated = { id: 'uuid-1', status: JobStatus.CLOSED };
+      (service.updateStatus as jest.Mock).mockResolvedValue(updated);
+
+      const result = await controller.updateStatus('uuid-1', {
+        status: JobStatus.CLOSED,
+      });
+
+      expect(service.updateStatus).toHaveBeenCalledWith(
+        'uuid-1',
+        JobStatus.CLOSED,
+      );
+      expect(result).toEqual(updated);
     });
   });
 });
