@@ -1,8 +1,10 @@
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { InvitesService } from './invites.service';
 import { CreateInviteDto } from './dto/create-invite.dto';
 import { UpdateInviteStatusDto } from './dto/update-invite-status.dto';
 
+@ApiTags('Invites')
 @Controller()
 export class InvitesController {
   constructor(private readonly invitesService: InvitesService) {}
