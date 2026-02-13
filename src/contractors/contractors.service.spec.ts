@@ -47,16 +47,50 @@ describe('ContractorsService', () => {
   });
 
   describe('findAll', () => {
-    it('should return only active contractors', async () => {
+    it('should return only active contractors when no filter', async () => {
       const contractors = [{ id: 'uuid-1', name: 'Иван', active: true }];
       (prisma.contractor.findMany as jest.Mock).mockResolvedValue(contractors);
 
-      const result = await service.findAll();
+      const result = await service.findAll({});
 
       expect(prisma.contractor.findMany).toHaveBeenCalledWith({
         where: { active: true },
       });
       expect(result).toEqual(contractors);
+    });
+
+    it('should filter by region', async () => {
+      const contractors = [{ id: 'uuid-1', name: 'Иван', region: 'Москва' }];
+      (prisma.contractor.findMany as jest.Mock).mockResolvedValue(contractors);
+
+      const result = await service.findAll({ region: 'Москва' });
+
+      expect(prisma.contractor.findMany).toHaveBeenCalledWith({
+        where: { active: true, region: 'Москва' },
+      });
+      expect(result).toEqual(contractors);
+    });
+
+    it('should filter by type', async () => {
+      const contractors = [{ id: 'uuid-1', name: 'ООО Рога', type: ContractorType.COMPANY }];
+      (prisma.contractor.findMany as jest.Mock).mockResolvedValue(contractors);
+
+      const result = await service.findAll({ type: ContractorType.COMPANY });
+
+      expect(prisma.contractor.findMany).toHaveBeenCalledWith({
+        where: { active: true, type: ContractorType.COMPANY },
+      });
+      expect(result).toEqual(contractors);
+    });
+
+    it('should filter by region and type', async () => {
+      (prisma.contractor.findMany as jest.Mock).mockResolvedValue([]);
+
+      await service.findAll({ region: 'Москва', type: ContractorType.IP });
+
+      expect(prisma.contractor.findMany).toHaveBeenCalledWith({
+        where: { active: true, region: 'Москва', type: ContractorType.IP },
+      });
     });
   });
 });

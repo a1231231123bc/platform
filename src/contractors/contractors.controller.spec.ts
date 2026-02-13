@@ -45,14 +45,25 @@ describe('ContractorsController', () => {
   });
 
   describe('findAll', () => {
-    it('should return all active contractors', async () => {
+    it('should call service.findAll with empty filter', async () => {
       const contractors = [{ id: 'uuid-1', name: 'Иван' }];
       (service.findAll as jest.Mock).mockResolvedValue(contractors);
 
-      const result = await controller.findAll();
+      const result = await controller.findAll({});
 
-      expect(service.findAll).toHaveBeenCalled();
+      expect(service.findAll).toHaveBeenCalledWith({});
       expect(result).toEqual(contractors);
+    });
+
+    it('should pass filter params to service', async () => {
+      (service.findAll as jest.Mock).mockResolvedValue([]);
+
+      await controller.findAll({ region: 'Москва', type: ContractorType.COMPANY });
+
+      expect(service.findAll).toHaveBeenCalledWith({
+        region: 'Москва',
+        type: ContractorType.COMPANY,
+      });
     });
   });
 });
