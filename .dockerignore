@@ -1,0 +1,7 @@
+node_modules
+dist
+.git
+.env
+gha_deploy_key*
+frontend/node_modules
+frontend/dist
