@@ -19,6 +19,12 @@ enum ContractorType {
   COMPANY
 }
 
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
 model Job {
   id          String    @id @default(uuid())
   title       String
@@ -26,6 +32,8 @@ model Job {
   region      String
   price       Int
   status      JobStatus @default(DRAFT)
+
+  invites     Invite[]
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -39,5 +47,22 @@ model Contractor {
   region    String
   active    Boolean         @default(true)
 
+  invites   Invite[]
+
   createdAt DateTime        @default(now())
+}
+
+model Invite {
+  id             String       @id @default(uuid())
+  jobId          String
+  contractorId   String
+  status         InviteStatus @default(PENDING)
+
+  job            Job          @relation(fields: [jobId], references: [id])
+  contractor     Contractor   @relation(fields: [contractorId], references: [id])
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([jobId, contractorId])
 }
