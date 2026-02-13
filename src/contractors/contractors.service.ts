@@ -1,17 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CreateContractorDto } from './dto/create-contractor.dto';
 
 @Injectable()
 export class ContractorsService {
   constructor(private prisma: PrismaService) {}
 
-  create(data: {
-    name: string;
-    phone: string;
-    type: 'INDIVIDUAL' | 'IP' | 'COMPANY';
-    region: string;
-  }) {
-    return this.prisma.contractor.create({ data });
+  create(dto: CreateContractorDto) {
+    return this.prisma.contractor.create({ data: dto });
   }
 
   findAll() {
