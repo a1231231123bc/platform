@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
+import { FilterJobsDto } from './dto/filter-jobs.dto';
 
 @Controller('jobs')
 export class JobsController {
@@ -12,7 +13,12 @@ export class JobsController {
   }
 
   @Get()
-  findAll() {
-    return this.jobsService.findAll();
+  findAll(@Query() filter: FilterJobsDto) {
+    return this.jobsService.findAll(filter);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.jobsService.findOne(id);
   }
 }
